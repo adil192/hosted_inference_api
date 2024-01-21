@@ -1,6 +1,6 @@
 name: hosted_inference_api
 description: "Test and evaluate, for free, over 150,000 machine learning models with fast inference hosted on Hugging Face shared infrastructure."
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/adil192/hosted_inference_api
 
 environment:
