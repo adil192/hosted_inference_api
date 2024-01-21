@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 class HuggingFaceError extends Error {
@@ -22,7 +24,7 @@ class HuggingFaceError extends Error {
       HuggingFaceModelNotFoundError.fixedStatusCode =>
         HuggingFaceModelNotFoundError(message: message),
       HuggingFaceLoadingError.fixedStatusCode =>
-        HuggingFaceLoadingError(message: message),
+        HuggingFaceLoadingError(json: message),
       _ => HuggingFaceUnknownError(
           statusCode: statusCode,
           message: message,
@@ -57,11 +59,31 @@ class HuggingFaceModelNotFoundError extends HuggingFaceError {
 class HuggingFaceLoadingError extends HuggingFaceError {
   static const fixedStatusCode = 503;
 
-  HuggingFaceLoadingError({required super.message})
-      : super._(statusCode: fixedStatusCode);
+  final double estimatedTime;
+
+  /// e.g. {"error":"Model instruction-tuning-sd/cartoonizer is currently loading","estimated_time":219.25982666015625}
+  HuggingFaceLoadingError({required String json})
+      : estimatedTime = _parseEstimatedTime(json),
+        super._(
+          statusCode: fixedStatusCode,
+          message: _parseError(json),
+        );
+
+  /// Returns the error from the JSON response.
+  static String _parseError(String json) {
+    final parsed = jsonDecode(json) as Map<String, dynamic>;
+    return parsed['error'];
+  }
+
+  /// Returns the estimated time from the JSON response.
+  static double _parseEstimatedTime(String json) {
+    final parsed = jsonDecode(json) as Map<String, dynamic>;
+    return (parsed['estimated_time'] as num).toDouble();
+  }
 
   @override
-  String toString() => 'HuggingFace model is loading: $message';
+  String toString() =>
+      'HuggingFaceLoadingError: $message, estimated time: ${estimatedTime}s';
 }
 
 /// e.g. {"error":"cannot identify image file <_io.BytesIO object at 0x7f416c25bdb0>"}
