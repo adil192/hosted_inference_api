@@ -1,18 +1,31 @@
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:huggingface_dart/src/errors.dart';
+import 'package:meta/meta.dart';
 
 export 'package:huggingface_dart/src/errors.dart';
 
-class HuggingFace<TInput extends Object, TOutput extends Object> {
+enum HFOutputType {
+  string,
+  bytes,
+}
+
+class HuggingFace {
   HuggingFace({
     required this.model,
+    required this.outputType,
     required this.apiToken,
-  })  : assert(TInput == String || TInput == Uint8List),
-        assert(TOutput == String || TOutput == Uint8List),
-        _client = http.Client();
+  }) : _client = http.Client();
+
+  @visibleForTesting
+  HuggingFace.withClient({
+    required this.model,
+    required this.outputType,
+    required this.apiToken,
+    required http.Client client,
+  }) : _client = client;
 
   final String model;
+  final HFOutputType outputType;
   final String? apiToken;
 
   late final http.Client _client;
@@ -25,7 +38,7 @@ class HuggingFace<TInput extends Object, TOutput extends Object> {
           'Authorization': 'Bearer $apiToken',
         });
 
-  Future<TOutput> run(TInput input) async {
+  Future<TOutput> run<TOutput>(Object input) async {
     final response = await _client.post(
       endpoint,
       headers: headers,
@@ -36,10 +49,9 @@ class HuggingFace<TInput extends Object, TOutput extends Object> {
       throw HuggingFaceError.fromResponse(response);
     }
 
-    return switch (TOutput) {
-      const (String) => response.body as TOutput,
-      const (Uint8List) => response.bodyBytes as TOutput,
-      _ => throw UnsupportedError('Unsupported output type: $TOutput'),
-    };
+    return switch (outputType) {
+      HFOutputType.string => response.body,
+      HFOutputType.bytes => response.bodyBytes,
+    } as TOutput;
   }
 }
