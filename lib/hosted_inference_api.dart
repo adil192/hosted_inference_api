@@ -1,23 +1,23 @@
 import 'package:http/http.dart' as http;
-import 'package:huggingface_dart/src/errors.dart';
+import 'package:hosted_inference_api/src/errors.dart';
 import 'package:meta/meta.dart';
 
-export 'package:huggingface_dart/src/errors.dart';
+export 'package:hosted_inference_api/src/errors.dart';
 
 enum HFOutputType {
   string,
   bytes,
 }
 
-class HuggingFace {
-  HuggingFace({
+class HFApi {
+  HFApi({
     required this.model,
     required this.outputType,
     required this.apiToken,
   }) : _client = http.Client();
 
   @visibleForTesting
-  HuggingFace.withClient({
+  HFApi.withClient({
     required this.model,
     required this.outputType,
     required this.apiToken,
@@ -46,7 +46,7 @@ class HuggingFace {
     );
 
     if (response.statusCode != 200) {
-      throw HuggingFaceError.fromResponse(response);
+      throw HFApiError.fromResponse(response);
     }
 
     return switch (outputType) {

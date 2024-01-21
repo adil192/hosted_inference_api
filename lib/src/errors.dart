@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-class HuggingFaceError extends Error {
-  HuggingFaceError._({
+class HFApiError extends Error {
+  HFApiError._({
     required this.statusCode,
     required this.message,
   });
@@ -11,7 +11,7 @@ class HuggingFaceError extends Error {
   final int statusCode;
   final String message;
 
-  factory HuggingFaceError.fromResponse(http.Response response) {
+  factory HFApiError.fromResponse(http.Response response) {
     final statusCode = response.statusCode;
     final message = response.body;
 
@@ -19,13 +19,12 @@ class HuggingFaceError extends Error {
         'HuggingFaceError should only be used for non-200 status codes');
 
     return switch (statusCode) {
-      HuggingFaceTooManyRequestsError.fixedStatusCode =>
-        HuggingFaceTooManyRequestsError(message: message),
-      HuggingFaceModelNotFoundError.fixedStatusCode =>
-        HuggingFaceModelNotFoundError(message: message),
-      HuggingFaceLoadingError.fixedStatusCode =>
-        HuggingFaceLoadingError(json: message),
-      _ => HuggingFaceUnknownError(
+      HFApiTooManyRequestsError.fixedStatusCode =>
+        HFApiTooManyRequestsError(message: message),
+      HFApiModelNotFoundError.fixedStatusCode =>
+        HFApiModelNotFoundError(message: message),
+      HFApiLoadingError.fixedStatusCode => HFApiLoadingError(json: message),
+      _ => HFApiUnknownError(
           statusCode: statusCode,
           message: message,
         ),
@@ -33,20 +32,20 @@ class HuggingFaceError extends Error {
   }
 }
 
-class HuggingFaceTooManyRequestsError extends HuggingFaceError {
+class HFApiTooManyRequestsError extends HFApiError {
   static const fixedStatusCode = 429;
 
-  HuggingFaceTooManyRequestsError({required super.message})
+  HFApiTooManyRequestsError({required super.message})
       : super._(statusCode: fixedStatusCode);
 
   @override
   String toString() => 'HuggingFace too many requests error: $message';
 }
 
-class HuggingFaceModelNotFoundError extends HuggingFaceError {
+class HFApiModelNotFoundError extends HFApiError {
   static const fixedStatusCode = 404;
 
-  HuggingFaceModelNotFoundError({required super.message})
+  HFApiModelNotFoundError({required super.message})
       : super._(statusCode: fixedStatusCode);
 
   @override
@@ -56,13 +55,13 @@ class HuggingFaceModelNotFoundError extends HuggingFaceError {
 /// If the requested model is not loaded in memory, the Hosted Inference API
 /// will start by loading the model into memory and returning a 503 response,
 /// before it can respond with the prediction.
-class HuggingFaceLoadingError extends HuggingFaceError {
+class HFApiLoadingError extends HFApiError {
   static const fixedStatusCode = 503;
 
   final double estimatedTime;
 
   /// e.g. {"error":"Model instruction-tuning-sd/cartoonizer is currently loading","estimated_time":219.25982666015625}
-  HuggingFaceLoadingError({required String json})
+  HFApiLoadingError({required String json})
       : estimatedTime = _parseEstimatedTime(json),
         super._(
           statusCode: fixedStatusCode,
@@ -87,8 +86,8 @@ class HuggingFaceLoadingError extends HuggingFaceError {
 }
 
 /// e.g. {"error":"cannot identify image file <_io.BytesIO object at 0x7f416c25bdb0>"}
-class HuggingFaceUnknownError extends HuggingFaceError {
-  HuggingFaceUnknownError({
+class HFApiUnknownError extends HFApiError {
+  HFApiUnknownError({
     required super.statusCode,
     required super.message,
   }) : super._();

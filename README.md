@@ -21,7 +21,7 @@ If you encounter a model that doesn't work, please open an issue.
 is using gpt2, and this is its analogue in this package:
 
 ```dart
-final api = HuggingFace(
+final api = HFApi(
   model: 'gpt2',
   outputType: HFOutputType.string,
   apiToken: 'hf_xxxxx',
@@ -32,7 +32,7 @@ final result = await api.run<String>('Can you please let us know more details ab
 ### [Cartoonizer](https://huggingface.co/instruction-tuning-sd/cartoonizer) (image-to-image)
 
 ```dart
-final api = HuggingFace(
+final api = HFApi(
   model: 'instruction-tuning-sd/cartoonizer',
   outputType: HFOutputType.bytes,
   apiToken: 'hf_xxxxx',
