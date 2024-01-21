@@ -1,39 +1,47 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Hugging Face Hosted Inference API
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+> Test and evaluate, for free, over 150,000 publicly accessible machine learning models, or your own private models, via simple HTTP requests, with fast inference hosted on Hugging Face shared infrastructure.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
+A wrapper package around HuggingFace's free [Hosted Inference API](https://huggingface.co/docs/api-inference).
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+This package is not affiliated or endorsed by HuggingFace,
+nor any of the models it hosts.
+Always check the license of the model you're using.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+This package supports text-to-text, text-to-image, image-to-image, and possibly other types of models.
+If you encounter a model that doesn't work, please open an issue.
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+### GPT-2 (text-to-text)
+
+[Hugging Face's example](https://huggingface.co/docs/api-inference/quicktour#running-inference-with-api-requests)
+is using gpt2, and this is its analogue in this package:
 
 ```dart
-const like = 'sample';
+final api = HuggingFace(
+  model: 'gpt2',
+  outputType: HFOutputType.string,
+  apiToken: 'hf_xxxxx',
+);
+final result = await api.run<String>('Can you please let us know more details about your ');
 ```
 
-## Additional information
+### [Cartoonizer](https://huggingface.co/instruction-tuning-sd/cartoonizer) (image-to-image)
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```dart
+final api = HuggingFace(
+  model: 'instruction-tuning-sd/cartoonizer',
+  outputType: HFOutputType.bytes,
+  apiToken: 'hf_xxxxx',
+);
+final inputImage = await File('input.jpg').readAsBytes();
+final result = await api.run<Uint8List>(inputImage);
+await File('output.jpg').writeAsBytes(result);
+```
+
+Note that some models seem to require the input to be a jpeg (i.e. not a png).
+Otherwise, you'll get a `HuggingFaceUnknownError` with a message like
+`{"error":"cannot identify image file <_io.BytesIO object at 0x7f416c25bdb0>"}`.
